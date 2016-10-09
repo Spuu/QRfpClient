@@ -3,6 +3,10 @@
 
 #include <QWidget>
 
+class QGridLayout;
+class SerialPortBrowser;
+class ManualSerialController;
+
 namespace Ui {
 class MainWidget;
 }
@@ -17,6 +21,10 @@ public:
 
 private:
     Ui::MainWidget *ui;
+
+    QGridLayout *layout;
+    SerialPortBrowser *spb;
+    ManualSerialController *msc;
 };
 
 #endif // MAINWIDGET_H
