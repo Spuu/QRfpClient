@@ -44,7 +44,7 @@ void ManualSerialController::setGui(bool isConnected)
 void ManualSerialController::on_openPortButton_clicked()
 {
     if(!port_->isOpen()) {
-        if(port_->open(QIODevice::WriteOnly))
+        if(port_->open(QIODevice::ReadWrite))
             this->setGui(true);
         else
             emit error(QString("COM port not connected."));
@@ -88,6 +88,7 @@ void ManualSerialController::onDataChanged()
 void ManualSerialController::onDataRead(const QByteArray &bytes)
 {
     data = bytes;
+    emit dataChange();
 }
 
 void ManualSerialController::handle_error(const QString &str)
@@ -154,5 +155,11 @@ void ManualSerialController::on_rviButton_clicked()
 void ManualSerialController::on_addTextButton_clicked()
 {
     data.append(ui->lineEdit->text());
+    emit dataChange();
+}
+
+void ManualSerialController::on_byteButton_clicked()
+{
+    data.append(ui->byteBox->value());
     emit dataChange();
 }

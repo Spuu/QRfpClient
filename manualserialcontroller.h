@@ -48,6 +48,8 @@ private slots:
 
     void setGui(bool isConnected);
 
+    void on_byteButton_clicked();
+
 private:
     Ui::ManualSerialController *ui;
 

@@ -52,7 +52,7 @@ SerialPortBrowser::SerialPortBrowser(QWidget *parent) :
              << QString::number(QSerialPort::TwoStop);
     ui->stopBitsBox->addItems(stopBits);
 
-    ui->disconnectButton->setEnabled(false);
+    //ui->disconnectButton->setEnabled(false);
 }
 
 SerialPortBrowser::~SerialPortBrowser()
@@ -91,8 +91,8 @@ void SerialPortBrowser::on_connectButton_clicked()
         port.setStopBits((QSerialPort::StopBits) ui->stopBitsBox->currentText().toInt());
         emit setupPort(&port);
 
-        ui->disconnectButton->setEnabled(true);
-        ui->connectButton->setEnabled(false);
+        //ui->disconnectButton->setEnabled(true);
+        //ui->connectButton->setEnabled(false);
     }
 }
 
@@ -100,7 +100,7 @@ void SerialPortBrowser::on_disconnectButton_clicked()
 {
     if(port.isOpen()) {
         port.close();
-        ui->disconnectButton->setEnabled(false);
-        ui->connectButton->setEnabled(true);
+        //ui->disconnectButton->setEnabled(false);
+        //ui->connectButton->setEnabled(true);
     }
 }

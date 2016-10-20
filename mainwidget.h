@@ -4,8 +4,14 @@
 #include <QWidget>
 
 class QGridLayout;
+class QStackedWidget;
+class DataTransfer;
 class SerialPortBrowser;
 class ManualSerialController;
+class GetAllProducts;
+
+#include "api/commandqueue.h"
+#include "api/debugresponder.h"
 
 namespace Ui {
 class MainWidget;
@@ -23,8 +29,15 @@ private:
     Ui::MainWidget *ui;
 
     QGridLayout *layout;
-    SerialPortBrowser *spb;
+    QStackedWidget *stack;
+    DataTransfer *dataTransfer;
+    /*SerialPortBrowser *spb;
     ManualSerialController *msc;
+
+    CommandQueue commandQueue;
+    DebugResponder debugResponder;
+
+    std::unique_ptr<GetAllProducts> get_all_products;*/
 };
 
 #endif // MAINWIDGET_H

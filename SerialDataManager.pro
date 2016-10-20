@@ -4,9 +4,11 @@
 #
 #-------------------------------------------------
 
-QT       += core gui serialport
+QT       += core gui serialport network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+
+CONFIG += c++14
 
 TARGET = SerialDataManager
 TEMPLATE = app
@@ -17,7 +19,15 @@ SOURCES += main.cpp\
     serial/serialcontroller.cpp \
     manualserialcontroller.cpp \
     serialportbrowser.cpp \
-    mainwidget.cpp
+    mainwidget.cpp \
+    data/product.cpp \
+    api/getallproducts.cpp \
+    api/postproduct.cpp \
+    api/command.cpp \
+    api/commandqueue.cpp \
+    api/irequester.cpp \
+    api/debugresponder.cpp \
+    datatransfer.cpp
 
 HEADERS  += \
     connectionmanager.h \
@@ -25,9 +35,19 @@ HEADERS  += \
     serial/serial.h \
     manualserialcontroller.h \
     serialportbrowser.h \
-    mainwidget.h
+    mainwidget.h \
+    data/product.h \
+    api/getallproducts.h \
+    api/irequester.h \
+    api/postproduct.h \
+    api/command.h \
+    api/commandqueue.h \
+    api/iresponder.h \
+    api/debugresponder.h \
+    datatransfer.h
 
 FORMS    += \
     manualserialcontroller.ui \
     serialportbrowser.ui \
-    mainwidget.ui
+    mainwidget.ui \
+    datatransfer.ui
