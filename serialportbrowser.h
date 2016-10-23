@@ -20,12 +20,8 @@ public:
 
 private slots:
     void on_portsBox_currentIndexChanged(const QString &arg1);
-
     void on_refreshButton_clicked();
-
-    void on_connectButton_clicked();
-
-    void on_disconnectButton_clicked();
+    void on_setupButton_clicked();
 
 signals:
     void setupPort(QSerialPort *port);

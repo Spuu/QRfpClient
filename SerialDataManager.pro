@@ -27,7 +27,13 @@ SOURCES += main.cpp\
     api/commandqueue.cpp \
     api/irequester.cpp \
     api/debugresponder.cpp \
-    datatransfer.cpp
+    datatransfer.cpp \
+    globalsettings.cpp \
+    serial/serialsession.cpp \
+    serial/startpacket.cpp \
+    serial/serial.cpp \
+    logger.cpp \
+    serial/signalpacket.cpp
 
 HEADERS  += \
     connectionmanager.h \
@@ -44,10 +50,17 @@ HEADERS  += \
     api/commandqueue.h \
     api/iresponder.h \
     api/debugresponder.h \
-    datatransfer.h
+    datatransfer.h \
+    globalsettings.h \
+    settings.h \
+    serial/serialsession.h \
+    serial/startpacket.h \
+    logger.h \
+    serial/signalpacket.h
 
 FORMS    += \
     manualserialcontroller.ui \
     serialportbrowser.ui \
     mainwidget.ui \
-    datatransfer.ui
+    datatransfer.ui \
+    globalsettings.ui

@@ -1,7 +1,14 @@
 #ifndef SERIAL_H
 #define SERIAL_H
 
+#include <QByteArray>
+
 namespace Serial {
+
+    enum DIRECTION {
+        DEVICE,
+        HOST,
+    };
 
     enum RESULT {
         SUCCESS,
@@ -19,6 +26,21 @@ namespace Serial {
         WACK = 0x09,
         RVI = 0x40
     };
+
+    class IPacket
+    {
+    public:
+        virtual QByteArray getData() const = 0;
+        virtual void setResult(RESULT result);
+        virtual char handleData(const QByteArray&) = 0;
+
+    private:
+        RESULT result_ = FAIL;
+    };
+
+    QByteArray CalcCrc(const QByteArray& ba);
+    QByteArray CalcCrc(const char *str,int len);
+    QByteArray createSerialPacket(PACKET p);
 }
 
 #endif // SERIAL_H

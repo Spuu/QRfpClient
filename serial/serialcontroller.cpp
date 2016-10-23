@@ -1,17 +1,21 @@
 #include "serialcontroller.h"
 
-SerialController::SerialController(QSerialPort *port, QWidget *parent, int timeout) :
-    QWidget(parent),
-    port_(port),
+SerialController::SerialController(ISerialCtrl *ctrl, int timeout) :
+    ctrl_(ctrl),
     timeout_(timeout)
 {
 
 }
 
+void SerialController::setPort(QSerialPort *port)
+{
+    port_ = port;
+}
+
 Serial::RESULT SerialController::read()
 {
     if (!port_->isOpen()) {
-        emit error(QObject::tr("Failed to open port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
+        ctrl_->error(QString("Failed to open port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
         return Serial::FAIL;
     }
 
@@ -20,38 +24,38 @@ Serial::RESULT SerialController::read()
         readData.append(port_->readAll());
 
     if (port_->error() == QSerialPort::ReadError) {
-        emit error(QObject::tr("Failed to read from port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
+        ctrl_->error(QString("Failed to read from port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
         return Serial::FAIL;
     } else if (port_->error() == QSerialPort::TimeoutError && readData.isEmpty()) {
-        emit error(QObject::tr("No data was currently available for reading from port %1").arg(port_->portName()));
+        ctrl_->error(QString("No data was currently available for reading from port %1").arg(port_->portName()));
         return Serial::FAIL;
     }
 
-    emit dataReceived(readData);
+    ctrl_->dataReceived(readData);
     return Serial::SUCCESS;
 }
 
 Serial::RESULT SerialController::write(QByteArray data)
 {
     if (!port_->isOpen()) {
-        emit error(QObject::tr("Failed to open port %1, error: %2").arg(port_->portName()).arg(port_->error()));
+        ctrl_->error(QString("Failed to open port %1, error: %2").arg(port_->portName()).arg(port_->error()));
         return Serial::FAIL;
     }
 
     qint64 bytesWritten = port_->write(data);
 
     if (bytesWritten == -1) {
-        emit error(QObject::tr("Failed to write the data to port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
+        ctrl_->error(QString("Failed to write the data to port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
         return Serial::FAIL;
     } else if (bytesWritten != data.size()) {
-        emit error(QObject::tr("Failed to write all the data to port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
+        ctrl_->error(QString("Failed to write all the data to port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
         return Serial::FAIL;
     } else if (!port_->waitForBytesWritten(timeout_)) {
-        emit error(QObject::tr("Operation timed out or an error occurred for port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
+        ctrl_->error(QString("Operation timed out or an error occurred for port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));
         return Serial::FAIL;
     }
 
     //port_->flush();
-    emit dataSent(data);
+    ctrl_->dataSent(data);
     return Serial::SUCCESS;
 }

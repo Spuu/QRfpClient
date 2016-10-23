@@ -5,11 +5,10 @@
 
 class GetAllProducts : public IRequester
 {
-    Q_OBJECT
 public:
-    GetAllProducts(Api::HTTP_ACTION action, const QString &api_src);
+    GetAllProducts(Api::HTTP_ACTION action);
     virtual ~GetAllProducts() {}
-    virtual void prepareData();
+    void prepareData();
 };
 
 #endif // GETALLPRODUCTS_H

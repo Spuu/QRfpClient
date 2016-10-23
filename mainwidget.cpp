@@ -10,12 +10,17 @@
 #include "manualserialcontroller.h"
 #include "serialportbrowser.h"
 #include "api/getallproducts.h"
+#include "settings.h"
 
 MainWidget::MainWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::MainWidget)
 {
     ui->setupUi(this);
+
+    QCoreApplication::setOrganizationName(Settings::ORGANIZATION_NAME);
+    //QCoreApplication::setOrganizationDomain("");
+    QCoreApplication::setApplicationName(Settings::APPLICATION_NAME);
 
     layout = new QGridLayout;
     stack = new QStackedWidget;
@@ -26,6 +31,7 @@ MainWidget::MainWidget(QWidget *parent) :
     stack->addWidget(dataTransfer);
 
     this->setLayout(layout);
+
     /*spb = new SerialPortBrowser(this);
     msc = new ManualSerialController(nullptr, this);
 

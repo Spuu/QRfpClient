@@ -1,7 +1,6 @@
 #ifndef IREQUESTER_H
 #define IREQUESTER_H
 
-#include <QObject>
 #include <QNetworkRequest>
 #include <memory>
 
@@ -14,8 +13,8 @@ enum HTTP_ACTION {
 };
 }
 
-class IRequester : public QObject {
-    Q_OBJECT
+class IRequester {
+
 public:
     IRequester(Api::HTTP_ACTION action);
     virtual ~IRequester() {}

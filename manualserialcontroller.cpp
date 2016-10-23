@@ -5,24 +5,36 @@
 
 #include "serial/serial.h"
 
-ManualSerialController::ManualSerialController(QSerialPort *port, QWidget *parent) :
+ManualSerialController::ManualSerialController(QWidget *parent) :
     ui(new Ui::ManualSerialController),
-    SerialController(port, parent, 10000)
+    SerialController(this, 10000)
 {
     ui->setupUi(this);
     this->setGui(false);
 
-    if(port)
-        ui->portName->setText(port->portName());
-
-    QObject::connect(this, &SerialController::error, this, &ManualSerialController::handle_error);
+    QObject::connect(this, &ManualSerialController::errorSig, this, &ManualSerialController::handle_error);
     QObject::connect(this, &ManualSerialController::dataChange, this, &ManualSerialController::onDataChanged);
-    QObject::connect(this, &SerialController::dataReceived, this, &ManualSerialController::onDataRead);
+    QObject::connect(this, &ManualSerialController::dataReceivedSig, this, &ManualSerialController::onDataRead);
 }
 
 ManualSerialController::~ManualSerialController()
 {
     delete ui;
+}
+
+void ManualSerialController::dataReceived(const QByteArray &data)
+{
+    emit dataReceivedSig(data);
+}
+
+void ManualSerialController::dataSent(const QByteArray &data)
+{
+    emit dataSentSig(data);
+}
+
+void ManualSerialController::error(const QString &err)
+{
+    emit errorSig(err);
 }
 
 void ManualSerialController::setPort(QSerialPort *port)
@@ -47,7 +59,7 @@ void ManualSerialController::on_openPortButton_clicked()
         if(port_->open(QIODevice::ReadWrite))
             this->setGui(true);
         else
-            emit error(QString("COM port not connected."));
+            emit errorSig(QString("COM port not connected."));
     }
 }
 
@@ -62,14 +74,14 @@ void ManualSerialController::on_closePortButton_clicked()
 void ManualSerialController::on_writeButton_clicked()
 {
     if(write(data) != Serial::SUCCESS) {
-        emit error(QString("Write error."));
+        emit errorSig(QString("Write error."));
     }
 }
 
 void ManualSerialController::on_readButton_clicked()
 {
     if(read() != Serial::SUCCESS) {
-        emit error(QString("Read error"));
+        emit errorSig(QString("Read error"));
     }
 }
 

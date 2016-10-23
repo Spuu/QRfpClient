@@ -10,16 +10,19 @@ namespace Ui {
 class ManualSerialController;
 }
 
-class ManualSerialController : public SerialController
+class ManualSerialController : public QWidget, public ISerialCtrl, public SerialController
 {
     Q_OBJECT
 
 public:
-    explicit ManualSerialController(QSerialPort *port = nullptr, QWidget *parent = 0);
+    explicit ManualSerialController(QWidget *parent = 0);
     ~ManualSerialController();
 
 signals:
     void dataChange();
+    void dataReceivedSig(const QByteArray &data);
+    void dataSentSig(const QByteArray &data);
+    void errorSig(const QString &err);
 
 public slots:
     void setPort(QSerialPort *port);
@@ -52,8 +55,11 @@ private slots:
 
 private:
     Ui::ManualSerialController *ui;
-
     QByteArray data;
+
+    void dataReceived(const QByteArray &data);
+    void dataSent(const QByteArray &data);
+    void error(const QString &err);
 };
 
 #endif // MANUALSERIALCONTROLLER_H

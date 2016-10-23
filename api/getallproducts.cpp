@@ -1,10 +1,13 @@
 #include "getallproducts.h"
+#include "settings.h"
+#include <QSettings>
 
-GetAllProducts::GetAllProducts(Api::HTTP_ACTION action, const QString &api_src) :
+GetAllProducts::GetAllProducts(Api::HTTP_ACTION action) :
     IRequester(action)
 {
-    QUrl url(api_src);
-    url.setPath("/posts");
+    QSettings cfg;
+    QUrl url(cfg.value(Settings::URL_KEY).toString());
+    url.setPath("posts");
     request_.setUrl(url);
 }
 

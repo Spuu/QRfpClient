@@ -6,9 +6,8 @@
 
 class PostProduct : public IRequester
 {
-    Q_OBJECT
 public:
-    PostProduct(Api::HTTP_ACTION action, const QString &api_src, const Product &product);
+    PostProduct(Api::HTTP_ACTION action, const Product &product);
     virtual ~PostProduct() {}
 
     virtual void prepareData();

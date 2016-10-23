@@ -5,25 +5,31 @@
 #include <QSerialPort>
 #include "serial.h"
 
-class SerialController : public QWidget
+class ISerialCtrl
 {
-    Q_OBJECT
-
 public:
-    explicit SerialController(QSerialPort *port, QWidget *parent = 0, int timeout = 2000);
+    virtual void dataReceived(const QByteArray &data) = 0;
+    virtual void dataSent(const QByteArray &data) = 0;
+    virtual void error(const QString &err) = 0;
+};
+
+class SerialController
+{
+public:
+    explicit SerialController(ISerialCtrl *ctrl, int timeout = 2000);
+    virtual ~SerialController() {}
+
+    void setPort(QSerialPort *port);
 
 protected:
+    Serial::RESULT read();
+    Serial::RESULT write(QByteArray data);
+
     int timeout_;
     QSerialPort *port_;
 
-signals:
-    void dataReceived(const QByteArray &data);
-    void dataSent(const QByteArray &data);
-    void error(const QString &err);
-
-public slots:
-    Serial::RESULT read();
-    Serial::RESULT write(QByteArray data);
+private:
+    ISerialCtrl *ctrl_;
 };
 
 #endif // SERIALCONTROLLER_H

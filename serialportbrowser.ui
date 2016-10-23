@@ -25,7 +25,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -35,13 +35,6 @@
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
-     <widget class="QLabel" name="statusLabel">
-      <property name="text">
-       <string>Status:</string>
-      </property>
-     </widget>
-    </item>
     <item row="0" column="2" colspan="2">
      <widget class="QLineEdit" name="statusEdit">
       <property name="readOnly">
@@ -63,6 +56,19 @@
      <widget class="QLabel" name="baudRateLabel">
       <property name="text">
        <string>BaudRate:</string>
+      </property>
+     </widget>
+    </item>
+    <item row="7" column="0">
+     <widget class="QPushButton" name="refreshButton">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="text">
+       <string>Refresh</string>
       </property>
      </widget>
     </item>
@@ -109,30 +115,17 @@
     <item row="6" column="2" colspan="2">
      <widget class="QComboBox" name="stopBitsBox"/>
     </item>
-    <item row="7" column="0">
-     <widget class="QPushButton" name="refreshButton">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
+    <item row="0" column="0">
+     <widget class="QLabel" name="statusLabel">
       <property name="text">
-       <string>Refresh</string>
+       <string>Status:</string>
       </property>
      </widget>
     </item>
-    <item row="7" column="1" colspan="2">
-     <widget class="QPushButton" name="connectButton">
+    <item row="7" column="2" colspan="2">
+     <widget class="QPushButton" name="setupButton">
       <property name="text">
-       <string>Connect</string>
-      </property>
-     </widget>
-    </item>
-    <item row="7" column="3">
-     <widget class="QPushButton" name="disconnectButton">
-      <property name="text">
-       <string>Disconnect</string>
+       <string>Setup</string>
       </property>
      </widget>
     </item>
