@@ -21,6 +21,8 @@ private slots:
 
     void on_resetButton_clicked();
 
+    void on_logLevelBox_currentIndexChanged(int index);
+
 private:
     Ui::GlobalSettings *ui;
     QSettings cfg;

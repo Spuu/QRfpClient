@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QSerialPort>
+#include <memory>
 #include "serial.h"
 
 class ISerialCtrl

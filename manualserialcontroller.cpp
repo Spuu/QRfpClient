@@ -40,7 +40,7 @@ void ManualSerialController::error(const QString &err)
 void ManualSerialController::setPort(QSerialPort *port)
 {
     if(port) {
-        this->port_ = port;
+        SerialController::setPort(port);
         ui->portName->setText(port->portName());
     }
 }

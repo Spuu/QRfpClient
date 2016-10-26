@@ -2,7 +2,7 @@
 #define SERIALSESSION_H
 
 #include "serial/serialcontroller.h"
-#include <memory>
+
 #include <QThread>
 #include <QTimer>
 
@@ -10,15 +10,21 @@ class SerialSession : public QThread, public ISerialCtrl, public SerialControlle
 {
     Q_OBJECT
 public:
-    SerialSession(Serial::DIRECTION direction, Serial::IPacket &&start_packet,
-                  const std::vector<Serial::IPacket*> *input_data, Serial::IPacket *resp_handler, int timeout = 2000);
+    SerialSession(QSerialPort *port, Serial::DIRECTION direction, Serial::IPacket &&start_packet,
+                  const std::vector<Serial::IPacket*> *input_data, Serial::IPacket *resp_handler, int timeout = 10000);
 
-    SerialSession(Serial::DIRECTION direction, Serial::IPacket &&start_packet,
+    SerialSession(QSerialPort *port, Serial::DIRECTION direction, Serial::IPacket &&start_packet,
                   Serial::IPacket *resp_handler, int timeout = 2000);
 
     void dataReceived(const QByteArray &data);
     void dataSent(const QByteArray &data);
     void error(const QString &err);
+
+public slots:
+    void process();
+
+signals:
+    void end_of_eventloop();
 
 private slots:
     void async_reader();

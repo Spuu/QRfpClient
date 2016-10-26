@@ -2,6 +2,7 @@
 #define LOGGER_H
 
 #include <QObject>
+#include <QSettings>
 
 enum class LogLevel {
     ERROR,
@@ -35,6 +36,9 @@ signals:
 protected:
     Logger();
     virtual ~Logger() {}
+
+private:
+    QSettings cfg;
 };
 
 #endif // LOGGER_H

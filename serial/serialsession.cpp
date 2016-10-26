@@ -1,8 +1,10 @@
 #include "serialsession.h"
 #include "logger.h"
 #include "signalpacket.h"
+#include <QMutexLocker>
+#include <QEventLoop>
 
-SerialSession::SerialSession(Serial::DIRECTION direction, Serial::IPacket &&start_packet, const std::vector<Serial::IPacket*> *input_data,
+SerialSession::SerialSession(QSerialPort *port, Serial::DIRECTION direction, Serial::IPacket &&start_packet, const std::vector<Serial::IPacket*> *input_data,
                              Serial::IPacket *resp_handler, int timeout) :
     direction_(direction),
     state_(STATE::NOT_STARTED),
@@ -11,10 +13,11 @@ SerialSession::SerialSession(Serial::DIRECTION direction, Serial::IPacket &&star
     resp_hdl_(resp_handler),
     SerialController(this, timeout)
 {
+    setPort(port);
     init();
 }
 
-SerialSession::SerialSession(Serial::DIRECTION direction, Serial::IPacket &&start_packet, Serial::IPacket *resp_handler, int timeout) :
+SerialSession::SerialSession(QSerialPort *port, Serial::DIRECTION direction, Serial::IPacket &&start_packet, Serial::IPacket *resp_handler, int timeout) :
     direction_(direction),
     state_(STATE::NOT_STARTED),
     start_packet_(std::move(start_packet)),
@@ -22,15 +25,16 @@ SerialSession::SerialSession(Serial::DIRECTION direction, Serial::IPacket &&star
     resp_hdl_(resp_handler),
     SerialController(this, timeout)
 {
+    setPort(port);
     init();
 }
 
 void SerialSession::init()
 {
-    timer_ = std::make_unique<QTimer>(this);
+    timer_ = std::make_unique<QTimer>();
     timer_->setInterval(timeout_);
 
-    QObject::connect(this->port_, SIGNAL(readyRead()), this, SLOT(async_reader()));
+    QObject::connect(port_, SIGNAL(readyRead()), this, SLOT(async_reader()));
     QObject::connect(timer_.get(), &QTimer::timeout, this, &SerialSession::watchdog);
 
     prepareDataToSend();
@@ -38,6 +42,7 @@ void SerialSession::init()
 
 void SerialSession::prepareDataToSend()
 {
+    data_to_send_.clear();
     data_to_send_.push_back(new SignalPacket(Serial::ENQ));
     data_to_send_.push_back(&start_packet_);
     data_to_send_.push_back(new SignalPacket(Serial::EOT));
@@ -51,18 +56,23 @@ void SerialSession::async_reader()
 
 void SerialSession::run()
 {
+    process();
+}
+
+void SerialSession::process()
+{
     Logger::instance().log(LogLevel::INFO, QString("Start Serial Session. Timeout = %1").arg(timeout_));
 
-    if(!openPort()) return;
+    //if(!openPort()) return;
 
-    timer_->start();
+    //timer_->start();
 
-    writePrepared();
-    while(state_ != STATE::CLOSED) {
+    //writePrepared();
+    //QEventLoop eventloop;
+    //QObject::connect(this, &SerialSession::end_of_eventloop, &eventloop, &QEventLoop::quit);
+    //eventloop.exec();
 
-    }
-
-    closePort();
+    //closePort();
     Logger::instance().log(LogLevel::TRACE, "End of Serial Session.");
 }
 
@@ -88,6 +98,8 @@ void SerialSession::watchdog()
     Logger::instance().log(LogLevel::ERROR, "Watchdog HIT! Timeout...");
     timer_->stop();
     state_ = STATE::CLOSED;
+
+    emit end_of_eventloop();
 }
 
 bool SerialSession::openPort()

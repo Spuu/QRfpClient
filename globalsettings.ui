@@ -41,6 +41,45 @@
      </property>
     </widget>
    </item>
+   <item row="4" column="1">
+    <widget class="QComboBox" name="logLevelBox">
+     <item>
+      <property name="text">
+       <string>ERROR</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>INFO</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>WARNING</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>DEBUG</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>TRACE</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="logLevelLabel">
+     <property name="text">
+      <string>Log level:</string>
+     </property>
+     <property name="buddy">
+      <cstring>logLevelBox</cstring>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>

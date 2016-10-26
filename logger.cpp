@@ -1,4 +1,5 @@
 #include "logger.h"
+#include "settings.h"
 
 Logger::Logger()
 {
@@ -27,5 +28,6 @@ QString Logger::LogLevelToQString(LogLevel e) {
 
 void Logger::log(LogLevel lvl, QString msg)
 {
-    emit logSig(QString(LogLevelToQString(lvl)+msg));
+    if(cfg.value(Settings::LOG_LEVEL_KEY).toInt() >= (int)lvl)
+        emit logSig(QString(LogLevelToQString(lvl)+msg));
 }
