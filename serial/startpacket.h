@@ -11,7 +11,6 @@ public:
     StartPacket(char job, char trans, QByteArray begin = QByteArray(18, ' '), QByteArray end = QByteArray(18, ' '));
 
     QByteArray getData() const;
-    char handleData(const QByteArray&);
 
 private:
     char job_;

@@ -39,16 +39,20 @@ DataTransfer::DataTransfer(QWidget *parent) :
 DataTransfer::~DataTransfer()
 {
     delete ui;
-    if(serialSession) delete serialSession;
 }
 
 void DataTransfer::on_getAllProductsButton_clicked()
 {
     Logger::instance().log(LogLevel::INFO, "Weszliśmy do GetAllProducts :-)");
 
-    serialSession = new SerialSession(this->port_, Serial::HOST, StartPacket('I', '0'), NULL);
-    QObject::connect(serialSession, SIGNAL(finished()), this, SLOT(abc()));
-    serialSession->start();
+    if(serialSession == nullptr) {
+        serialSession.reset(new SerialSession(this->port_, StartPacket('I', '0'), pm));
+        QObject::connect(serialSession.get(), &SerialSession::finished, [&]() {
+            serialSession.reset();
+        });
+        //QObject::connect(serialSession, SIGNAL(finished()), this, SLOT(abc()));
+        serialSession->process();
+    }
 }
 
 void DataTransfer::abc()

@@ -25,8 +25,3 @@ QByteArray StartPacket::getData() const
 
     return data;
 }
-
-char StartPacket::handleData(const QByteArray&)
-{
-    return Serial::ACK;
-}

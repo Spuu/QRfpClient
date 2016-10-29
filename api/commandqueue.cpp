@@ -22,4 +22,5 @@ void CommandQueue::executeNext()
 void CommandQueue::add(CommandPtr cmd)
 {
     commands.push_back(std::move(cmd));
+    QObject::connect(cmd.get(), SIGNAL(done()), this, SLOT(executeNext()));
 }

@@ -3,14 +3,16 @@
 
 #include <QStandardItemModel>
 #include "product.h"
+#include "serial/serial.h"
 
-class ProductsManager : public QStandardItemModel
+class ProductsManager : public QStandardItemModel, public Serial::IPacketHandler
 {
     Q_OBJECT
 public:
     ProductsManager();
     virtual ~ProductsManager() {}
 
+    char handleData(const QByteArray&);
     void insert(Product *prod);
 };
 

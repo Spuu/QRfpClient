@@ -1,13 +1,13 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-#include <QObject>
+#include "icommand.h"
 #include <QNetworkAccessManager>
 
 class IRequester;
 class IResponder;
 
-class Command : public QObject
+class Command : public ICommand
 {
     Q_OBJECT
 public:

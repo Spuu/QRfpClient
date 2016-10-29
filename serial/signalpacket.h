@@ -1,15 +1,16 @@
 #ifndef SIGNALPACKET_H
 #define SIGNALPACKET_H
 
+#include <iostream>
 #include "serial.h"
 
 class SignalPacket : public Serial::IPacket
 {
 public:
-    SignalPacket(Serial::PACKET packet);
+    SignalPacket(Serial::PACKET packet = Serial::ACK);
+    virtual ~SignalPacket() {}
 
     virtual QByteArray getData() const;
-    virtual char handleData(const QByteArray&);
 
 private:
     Serial::PACKET packet_;

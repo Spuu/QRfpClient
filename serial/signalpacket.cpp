@@ -10,8 +10,3 @@ QByteArray SignalPacket::getData() const
 {
     return Serial::createSerialPacket(packet_);
 }
-
-char SignalPacket::handleData(const QByteArray&)
-{
-
-}

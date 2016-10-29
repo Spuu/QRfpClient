@@ -3,10 +3,11 @@
 #include "signalpacket.h"
 #include <QMutexLocker>
 #include <QEventLoop>
+#include <algorithm>
 
-SerialSession::SerialSession(QSerialPort *port, Serial::DIRECTION direction, Serial::IPacket &&start_packet, const std::vector<Serial::IPacket*> *input_data,
-                             Serial::IPacket *resp_handler, int timeout) :
-    direction_(direction),
+SerialSession::SerialSession(QSerialPort *port, Serial::IPacket &&start_packet, std::vector<Serial::IPacket*> *input_data,
+                             Serial::IPacketHandler *resp_handler, int timeout) :
+    direction_(Serial::DEVICE),
     state_(STATE::NOT_STARTED),
     start_packet_(std::move(start_packet)),
     input_data_(input_data),
@@ -17,11 +18,11 @@ SerialSession::SerialSession(QSerialPort *port, Serial::DIRECTION direction, Ser
     init();
 }
 
-SerialSession::SerialSession(QSerialPort *port, Serial::DIRECTION direction, Serial::IPacket &&start_packet, Serial::IPacket *resp_handler, int timeout) :
-    direction_(direction),
+SerialSession::SerialSession(QSerialPort *port, Serial::IPacket &&start_packet, Serial::IPacketHandler *resp_handler, int timeout) :
+    direction_(Serial::HOST),
     state_(STATE::NOT_STARTED),
     start_packet_(std::move(start_packet)),
-    input_data_(NULL),
+    input_data_(nullptr),
     resp_hdl_(resp_handler),
     SerialController(this, timeout)
 {
@@ -37,15 +38,22 @@ void SerialSession::init()
     QObject::connect(port_, SIGNAL(readyRead()), this, SLOT(async_reader()));
     QObject::connect(timer_.get(), &QTimer::timeout, this, &SerialSession::watchdog);
 
+    signalMap_[Serial::ENQ] = std::make_unique<SignalPacket>(Serial::ENQ);
+    signalMap_[Serial::EOT] = std::make_unique<SignalPacket>(Serial::EOT);
+
     prepareDataToSend();
 }
 
 void SerialSession::prepareDataToSend()
 {
     data_to_send_.clear();
-    data_to_send_.push_back(new SignalPacket(Serial::ENQ));
+    data_to_send_.push_back(signalMap_[Serial::ENQ].get());
     data_to_send_.push_back(&start_packet_);
-    data_to_send_.push_back(new SignalPacket(Serial::EOT));
+
+    if(input_data_)
+        copy(input_data_->begin(), input_data_->end(), back_inserter(data_to_send_));
+
+    data_to_send_.push_back(signalMap_[Serial::EOT].get());
     d_iter_ = data_to_send_.begin();
 }
 
@@ -63,17 +71,17 @@ void SerialSession::process()
 {
     Logger::instance().log(LogLevel::INFO, QString("Start Serial Session. Timeout = %1").arg(timeout_));
 
-    //if(!openPort()) return;
+    if(!openPort()) return;
+    timer_->start();
 
-    //timer_->start();
+    writePrepared();
+    QEventLoop eventloop;
+    QObject::connect(this, &SerialSession::end_of_eventloop, &eventloop, &QEventLoop::quit);
+    eventloop.exec();
 
-    //writePrepared();
-    //QEventLoop eventloop;
-    //QObject::connect(this, &SerialSession::end_of_eventloop, &eventloop, &QEventLoop::quit);
-    //eventloop.exec();
-
-    //closePort();
+    closePort();
     Logger::instance().log(LogLevel::TRACE, "End of Serial Session.");
+    emit finished();
 }
 
 void SerialSession::writePrepared()
@@ -126,48 +134,72 @@ void SerialSession::dataReceived(const QByteArray &data)
     Logger::instance().log(LogLevel::TRACE, QString("Data Received (%2 bytes): %1").arg(QString(data)).arg(data.size()));
 
     if(direction_ == Serial::DEVICE) {
-        if(data.size() != 1)
-            Logger::instance().log(LogLevel::WARNING, "Received data should be 1 byte.");
+        dataReceivedToDevice(data);
+    } else {
+        dataReceivedToHost(data);
+    }
+}
 
-        if(data.isEmpty()) {
-            Logger::instance().log(LogLevel::ERROR, "Received data is empty.");
+void SerialSession::dataReceivedToDevice(const QByteArray &data)
+{
+    if(data.size() != 1)
+        Logger::instance().log(LogLevel::WARNING, "Received data should be 1 byte.");
+
+    if(data.isEmpty()) {
+        Logger::instance().log(LogLevel::ERROR, "Received data is empty.");
+        return;
+    }
+
+    switch(data[0]) {
+    case Serial::ACK:
+        (*d_iter_)->setResult(Serial::SUCCESS);
+        ++d_iter_;
+        break;
+
+    case Serial::NAK:
+        break;
+
+    case Serial::WACK:
+        QThread::sleep(1);
+        break;
+
+    case Serial::RVI:
+        state_ = STATE::RVI_ERROR;
+        direction_ = Serial::HOST;
+        data_to_send_.clear();
+        data_to_send_.push_back(signalMap_[Serial::EOT].get());
+        d_iter_ = data_to_send_.begin();
+        break;
+
+    case Serial::EOT:
+        (*d_iter_)->setResult(Serial::SUCCESS);
+        ++d_iter_;
+        break;
+    }
+
+    writePrepared();
+}
+
+void SerialSession::dataReceivedToHost(const QByteArray &data)
+{
+    if(data.size() == 1) {
+        if(data[0] == Serial::EOT) {
+            write(Serial::createSerialPacket(Serial::EOT));
+            state_ = STATE::CLOSED;
             return;
         }
 
-        switch(data[0]) {
-        case Serial::ACK:
-            (*d_iter_)->setResult(Serial::SUCCESS);
-            ++d_iter_;
-            break;
+        if(data[0] == Serial::WACK)
+            return;
+    }
 
-        case Serial::NAK:
-            break;
-
-        case Serial::WACK:
-            QThread::sleep(1);
-            break;
-
-        case Serial::RVI:
-            direction_ = Serial::HOST;
-            data_to_send_.clear();
-            data_to_send_.push_back(new SignalPacket(Serial::EOT));
-            d_iter_ = data_to_send_.begin();
-            break;
-
-        case Serial::EOT:
-            (*d_iter_)->setResult(Serial::SUCCESS);
-            ++d_iter_;
-            break;
-        }
-
-        writePrepared();
+    if(state_ == STATE::RVI_ERROR) {
+        errorPackets_.push_back(std::make_unique<ErrorPacket>(data));
+    } else if(resp_hdl_) {
+        char result = resp_hdl_->handleData(data);
+        write(Serial::createSerialPacket((Serial::PACKET)result));
     } else {
-        if(data.size() == 1 && data[0] == Serial::EOT) {
-            write(Serial::createSerialPacket(Serial::EOT));
-            state_ = STATE::CLOSED;
-        } else {
-            write(Serial::createSerialPacket(Serial::ACK));
-        }
+        write(Serial::createSerialPacket(Serial::ACK));
     }
 }
 

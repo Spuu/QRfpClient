@@ -27,12 +27,16 @@ namespace Serial {
         RVI = 0x40
     };
 
+    class IPacketHandler {
+    public:
+        virtual char handleData(const QByteArray&) = 0;
+    };
+
     class IPacket
     {
     public:
         virtual QByteArray getData() const = 0;
         virtual void setResult(RESULT result);
-        virtual char handleData(const QByteArray&) = 0;
 
     private:
         RESULT result_ = FAIL;

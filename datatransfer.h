@@ -35,7 +35,7 @@ private:
     std::unique_ptr<GlobalSettings> gs;
     ProductsManager *pm;
     QSerialPort *port_;
-    SerialSession *serialSession;
+    std::unique_ptr<SerialSession> serialSession;
 };
 
 #endif // DATATRANSFER_H

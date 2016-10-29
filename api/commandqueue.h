@@ -1,17 +1,15 @@
 #ifndef COMMANDQUEUE_H
 #define COMMANDQUEUE_H
 
-#include <QObject>
 #include <vector>
 #include <memory>
-
 #include "command.h"
 
 typedef std::unique_ptr<Command> CommandPtr;
 typedef std::vector<CommandPtr> CommandVec;
 typedef CommandVec::iterator CommandVecIter;
 
-class CommandQueue : public QObject
+class CommandQueue : public ICommand
 {
     Q_OBJECT
 
