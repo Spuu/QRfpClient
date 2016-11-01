@@ -20,8 +20,8 @@ Serial::RESULT SerialController::read()
     }
 
     QByteArray readData = port_->readAll();
-    while (port_->waitForReadyRead(timeout_))
-        readData.append(port_->readAll());
+    //while (port_->waitForReadyRead(timeout_))
+        //readData.append(port_->readAll());
 
     if (port_->error() == QSerialPort::ReadError) {
         ctrl_->error(QString("Failed to read from port %1, error: %2").arg(port_->portName()).arg(port_->errorString()));

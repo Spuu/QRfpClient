@@ -52,14 +52,16 @@ void DataTransfer::on_getAllProductsButton_clicked()
 {
     Logger::instance().log(LogLevel::INFO, "Weszliśmy do GetAllProducts :-)");
 
-    if(serialSession == nullptr) {
-        serialSession.reset(new SerialSession(this->spp, StartPacket('I', '0'), pm.get(), 60000));
-        QObject::connect(serialSession.get(), &SerialSession::finished, [&]() {
-            serialSession.reset();
-        });
-        //QObject::connect(serialSession, SIGNAL(finished()), this, SLOT(abc()));
-        serialSession->process();
-    }
+    QThread* thread = new QThread;
+    SerialSession* worker = new SerialSession(this->spp, StartPacket('I', '0'), pm.get(), 60000);
+    worker->moveToThread(thread);
+
+    connect(thread, SIGNAL (started()), worker, SLOT (process()));
+    connect(worker, SIGNAL (finished()), thread, SLOT (quit()));
+    connect(worker, SIGNAL (finished()), worker, SLOT (deleteLater()));
+    connect(thread, SIGNAL (finished()), thread, SLOT (deleteLater()));
+    connect(worker, SIGNAL(finished()), this, SLOT(abc()));
+    thread->start();
 }
 
 void DataTransfer::abc()

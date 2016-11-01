@@ -14,7 +14,7 @@ SerialSession::SerialSession(SerialPortParams params, StartPacket start_packet, 
     spp(params),
     SerialController(this, timeout)
 {
-    init();
+
 }
 
 SerialSession::SerialSession(SerialPortParams params, StartPacket start_packet, Serial::IPacketHandler *resp_handler, int timeout) :
@@ -25,7 +25,7 @@ SerialSession::SerialSession(SerialPortParams params, StartPacket start_packet, 
     spp(params),
     SerialController(this, timeout)
 {
-    init();
+
 }
 
 void SerialSession::init()
@@ -36,23 +36,13 @@ void SerialSession::init()
     timer_ = std::make_unique<QTimer>();
     timer_->setInterval(timeout_);
 
-    debugtimer = std::make_unique<QTimer>();
-    debugtimer->setInterval(1000);
-
     QObject::connect(port_.get(), SIGNAL(readyRead()), this, SLOT(async_reader()));
     QObject::connect(timer_.get(), &QTimer::timeout, this, &SerialSession::watchdog);
-    QObject::connect(debugtimer.get(), &QTimer::timeout, this, &SerialSession::abc);
 
     signalMap_[Serial::ENQ] = std::make_unique<SignalPacket>(Serial::ENQ);
     signalMap_[Serial::EOT] = std::make_unique<SignalPacket>(Serial::EOT);
 
     prepareDataToSend();
-}
-
-void SerialSession::abc()
-{
-    ++d_iter_;
-    writePrepared();
 }
 
 void SerialSession::prepareDataToSend()
@@ -73,13 +63,9 @@ void SerialSession::async_reader()
     read();
 }
 
-void SerialSession::run()
-{
-    process();
-}
-
 void SerialSession::process()
 {
+    init();
     Logger::instance().log(LogLevel::INFO, QString("Start Serial Session. Timeout = %1").arg(timeout_));
 
     if(!openPort()) return;
@@ -101,7 +87,6 @@ void SerialSession::process()
  */
 void SerialSession::writePrepared()
 {
-    //debugtimer->start();
     if(d_iter_ == data_to_send_.end()) {
         Logger::instance().log(LogLevel::WARNING, "Artificial watchdog triggered due to inadequate data send trial.");
         watchdog();
@@ -117,8 +102,12 @@ void SerialSession::writePrepared()
 void SerialSession::watchdog()
 {
     Logger::instance().log(LogLevel::ERROR, "Watchdog HIT! Timeout...");
+    cleanUp();
+}
+
+void SerialSession::cleanUp()
+{
     timer_->stop();
-    debugtimer->stop();
     state_ = STATE::CLOSED;
 
     emit end_of_eventloop();
@@ -202,7 +191,7 @@ void SerialSession::dataReceivedToHost(const QByteArray &data)
     if(data.size() == 1) {
         if(data[0] == Serial::EOT) {
             write(Serial::createSerialPacket(Serial::EOT));
-            state_ = STATE::CLOSED;
+            cleanUp();
             return;
         }
 

@@ -10,6 +10,7 @@ namespace Ui {
 class DataTransfer;
 }
 
+class QThread;
 class SerialSession;
 class QSerialPort;
 class SerialPortBrowser;

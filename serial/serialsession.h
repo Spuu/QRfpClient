@@ -8,7 +8,6 @@
 #include "serial/serialportparams.h"
 #include "serial/startpacket.h"
 
-#include <QThread>
 #include <QTimer>
 
 class SerialSession : public QObject, public ISerialCtrl, public SerialController
@@ -36,7 +35,6 @@ signals:
 
 private slots:
     void async_reader();
-    void abc();
 
 private:
     enum class STATE {
@@ -58,18 +56,18 @@ private:
     std::vector<Serial::IPacket*> data_to_send_;
     std::vector<Serial::IPacket*>::iterator d_iter_;
 
-    std::unique_ptr<QTimer> timer_, debugtimer;
+    std::unique_ptr<QTimer> timer_;
 
     std::map<Serial::PACKET, std::unique_ptr<SignalPacket>> signalMap_;
     std::vector<std::unique_ptr<ErrorPacket>> errorPackets_;
 
     void init();
     void watchdog();
+    void cleanUp();
     bool openPort();
     void closePort();
     void prepareDataToSend();
     void writePrepared();
-    void run();
     void dataReceivedToDevice(const QByteArray &data);
     void dataReceivedToHost(const QByteArray &data);
 };
