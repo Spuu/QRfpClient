@@ -3,6 +3,7 @@
 #include "serialportbrowser.h"
 #include "serial/serialsession.h"
 #include "serial/startpacket.h"
+#include "manualserialcontroller.h"
 #include "data/productsmanager.h"
 #include "globalsettings.h"
 #include "settings.h"
@@ -19,7 +20,7 @@ DataTransfer::DataTransfer(QWidget *parent) :
 
     spb = std::make_unique<SerialPortBrowser>();
     gs = std::make_unique<GlobalSettings>();
-    pm = new ProductsManager();
+    pm = std::make_unique<ProductsManager>();
 
     ui->tabWidget->addTab(spb.get(), "Serial Config");
     ui->tabWidget->addTab(gs.get(), "Global Settings");
@@ -27,17 +28,23 @@ DataTransfer::DataTransfer(QWidget *parent) :
 
     pm->insert(new Product("test", "123456", 1.234, 18));
 
-    ui->listView->setModel(pm);
+    ui->listView->setModel(pm.get());
 
     QObject::connect(spb.get(), &SerialPortBrowser::setupPort, this, &DataTransfer::setupPort);
 
     QObject::connect(&Logger::instance(), &Logger::logSig, ui->logList, [&](const QString &msg){
-        ui->logList->insertItem(0, msg);
+            ui->logList->insertItem(0, msg);
     });
+
+    // setup manual serial controller
+    msc = std::make_unique<ManualSerialController>(this);
+    ui->tabWidget->addTab(msc.get(), "Manual Controller");
+    QObject::connect(spb.get(), &SerialPortBrowser::setupPort, msc.get(), &ManualSerialController::setPort);
 }
 
 DataTransfer::~DataTransfer()
 {
+    Logger::instance().disconnect();
     delete ui;
 }
 
@@ -46,7 +53,7 @@ void DataTransfer::on_getAllProductsButton_clicked()
     Logger::instance().log(LogLevel::INFO, "Weszliśmy do GetAllProducts :-)");
 
     if(serialSession == nullptr) {
-        serialSession.reset(new SerialSession(this->port_, StartPacket('I', '0'), pm));
+        serialSession.reset(new SerialSession(this->spp, StartPacket('I', '0'), pm.get(), 60000));
         QObject::connect(serialSession.get(), &SerialSession::finished, [&]() {
             serialSession.reset();
         });
@@ -60,10 +67,10 @@ void DataTransfer::abc()
     Logger::instance().log(LogLevel::INFO, "End of thread");
 }
 
-void DataTransfer::setupPort(QSerialPort *port)
+void DataTransfer::setupPort(SerialPortParams params)
 {
-    port_ = port;
-    Logger::instance().log(LogLevel::INFO, QString("%1 port is chosen").arg(port_->portName()));
+    spp = params;
+    Logger::instance().log(LogLevel::INFO, QString("%1 port is chosen").arg(spp.getPortName()));
 }
 
 void DataTransfer::on_getNewProductsButton_clicked()

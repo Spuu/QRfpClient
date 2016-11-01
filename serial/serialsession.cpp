@@ -5,43 +5,54 @@
 #include <QEventLoop>
 #include <algorithm>
 
-SerialSession::SerialSession(QSerialPort *port, Serial::IPacket &&start_packet, std::vector<Serial::IPacket*> *input_data,
+SerialSession::SerialSession(SerialPortParams params, StartPacket start_packet, std::vector<Serial::IPacket*> *input_data,
                              Serial::IPacketHandler *resp_handler, int timeout) :
-    direction_(Serial::DEVICE),
     state_(STATE::NOT_STARTED),
     start_packet_(std::move(start_packet)),
     input_data_(input_data),
     resp_hdl_(resp_handler),
+    spp(params),
     SerialController(this, timeout)
 {
-    setPort(port);
     init();
 }
 
-SerialSession::SerialSession(QSerialPort *port, Serial::IPacket &&start_packet, Serial::IPacketHandler *resp_handler, int timeout) :
-    direction_(Serial::HOST),
+SerialSession::SerialSession(SerialPortParams params, StartPacket start_packet, Serial::IPacketHandler *resp_handler, int timeout) :
     state_(STATE::NOT_STARTED),
     start_packet_(std::move(start_packet)),
     input_data_(nullptr),
     resp_hdl_(resp_handler),
+    spp(params),
     SerialController(this, timeout)
 {
-    setPort(port);
     init();
 }
 
 void SerialSession::init()
 {
+    port_ = std::make_unique<SerialPort>(spp);
+    SerialController::setPort(port_.get());
+
     timer_ = std::make_unique<QTimer>();
     timer_->setInterval(timeout_);
 
-    QObject::connect(port_, SIGNAL(readyRead()), this, SLOT(async_reader()));
+    debugtimer = std::make_unique<QTimer>();
+    debugtimer->setInterval(1000);
+
+    QObject::connect(port_.get(), SIGNAL(readyRead()), this, SLOT(async_reader()));
     QObject::connect(timer_.get(), &QTimer::timeout, this, &SerialSession::watchdog);
+    QObject::connect(debugtimer.get(), &QTimer::timeout, this, &SerialSession::abc);
 
     signalMap_[Serial::ENQ] = std::make_unique<SignalPacket>(Serial::ENQ);
     signalMap_[Serial::EOT] = std::make_unique<SignalPacket>(Serial::EOT);
 
     prepareDataToSend();
+}
+
+void SerialSession::abc()
+{
+    ++d_iter_;
+    writePrepared();
 }
 
 void SerialSession::prepareDataToSend()
@@ -84,27 +95,30 @@ void SerialSession::process()
     emit finished();
 }
 
+/**
+ * Write prepared data to device ONLY
+ * When invoked in different circumstances, set state to Closed.
+ */
 void SerialSession::writePrepared()
 {
+    //debugtimer->start();
     if(d_iter_ == data_to_send_.end()) {
-        if(state_ == STATE::HOST_TO_DEVICE) {
-            if(direction_ == Serial::DEVICE)
-                state_ = STATE::CLOSED;
-            else
-                state_ = STATE::DEVICE_TO_HOST;
-        }
-    }
-
-    if(state_ == STATE::DEVICE_TO_HOST)
-        write(Serial::createSerialPacket(Serial::ACK));
-    else if(state_ != STATE::CLOSED)
+        Logger::instance().log(LogLevel::WARNING, "Artificial watchdog triggered due to inadequate data send trial.");
+        watchdog();
+    } else {
         write((*d_iter_)->getData());
+    }
 }
 
+/**
+ * Get out from thread eventloop.
+ * Treated as error since it's not expected (ever).
+ */
 void SerialSession::watchdog()
 {
     Logger::instance().log(LogLevel::ERROR, "Watchdog HIT! Timeout...");
     timer_->stop();
+    debugtimer->stop();
     state_ = STATE::CLOSED;
 
     emit end_of_eventloop();
@@ -131,9 +145,9 @@ void SerialSession::closePort()
 void SerialSession::dataReceived(const QByteArray &data)
 {
     timer_->start();
-    Logger::instance().log(LogLevel::TRACE, QString("Data Received (%2 bytes): %1").arg(QString(data)).arg(data.size()));
+    Logger::instance().log(LogLevel::TRACE, QString("Data Received (%2 bytes): %1").arg(QString(data.toHex())).arg(data.size()));
 
-    if(direction_ == Serial::DEVICE) {
+    if(state_ == STATE::HOST_TO_DEVICE) {
         dataReceivedToDevice(data);
     } else {
         dataReceivedToHost(data);
@@ -152,6 +166,7 @@ void SerialSession::dataReceivedToDevice(const QByteArray &data)
 
     switch(data[0]) {
     case Serial::ACK:
+    case Serial::EOT:
         (*d_iter_)->setResult(Serial::SUCCESS);
         ++d_iter_;
         break;
@@ -165,16 +180,18 @@ void SerialSession::dataReceivedToDevice(const QByteArray &data)
 
     case Serial::RVI:
         state_ = STATE::RVI_ERROR;
-        direction_ = Serial::HOST;
         data_to_send_.clear();
         data_to_send_.push_back(signalMap_[Serial::EOT].get());
         d_iter_ = data_to_send_.begin();
         break;
 
-    case Serial::EOT:
+    /* switch direction of data flow to device-to-host */
+    case Serial::ENQ:
         (*d_iter_)->setResult(Serial::SUCCESS);
         ++d_iter_;
-        break;
+        state_ = STATE::DEVICE_TO_HOST;
+        dataReceivedToHost(data);
+        return;
     }
 
     writePrepared();
@@ -191,6 +208,11 @@ void SerialSession::dataReceivedToHost(const QByteArray &data)
 
         if(data[0] == Serial::WACK)
             return;
+
+        if(data[0] == Serial::ENQ) {
+            write(Serial::createSerialPacket(Serial::ACK));
+            return;
+        }
     }
 
     if(state_ == STATE::RVI_ERROR) {
@@ -205,7 +227,8 @@ void SerialSession::dataReceivedToHost(const QByteArray &data)
 
 void SerialSession::dataSent(const QByteArray &data)
 {
-    Logger::instance().log(LogLevel::TRACE, QString("Data Sent: %1").arg(QString(data)));
+    timer_->start();
+    Logger::instance().log(LogLevel::TRACE, QString("Data Sent: %1").arg(QString(data.toHex())));
 }
 
 void SerialSession::error(const QString &err)

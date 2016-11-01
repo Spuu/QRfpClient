@@ -35,7 +35,9 @@ SOURCES += main.cpp\
     logger.cpp \
     serial/signalpacket.cpp \
     data/productsmanager.cpp \
-    serial/errorpacket.cpp
+    serial/errorpacket.cpp \
+    serial/serialportparams.cpp \
+    serial/serialport.cpp
 
 HEADERS  += \
     connectionmanager.h \
@@ -61,7 +63,9 @@ HEADERS  += \
     serial/signalpacket.h \
     data/productsmanager.h \
     serial/errorpacket.h \
-    api/icommand.h
+    api/icommand.h \
+    serial/serialportparams.h \
+    serial/serialport.h
 
 FORMS    += \
     manualserialcontroller.ui \

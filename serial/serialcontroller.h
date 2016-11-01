@@ -27,10 +27,10 @@ protected:
     Serial::RESULT write(QByteArray data);
 
     int timeout_;
-    QSerialPort *port_;
 
 private:
     ISerialCtrl *ctrl_;
+    QSerialPort *port_;
 };
 
 #endif // SERIALCONTROLLER_H

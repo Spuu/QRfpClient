@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QSerialPort>
+#include "serial/serialportparams.h"
 
 namespace Ui {
 class SerialPortBrowser;
@@ -24,7 +25,7 @@ private slots:
     void on_setupButton_clicked();
 
 signals:
-    void setupPort(QSerialPort *port);
+    void setupPort(SerialPortParams);
 
 private:
     Ui::SerialPortBrowser *ui;

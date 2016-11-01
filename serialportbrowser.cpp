@@ -87,6 +87,6 @@ void SerialPortBrowser::on_setupButton_clicked()
         port.setParity((QSerialPort::Parity) ui->parityBox->currentText().toInt());
         port.setFlowControl((QSerialPort::FlowControl) ui->flowControlBox->currentText().toInt());
         port.setStopBits((QSerialPort::StopBits) ui->stopBitsBox->currentText().toInt());
-        emit setupPort(&port);
+        emit setupPort(SerialPortParams(port));
     }
 }

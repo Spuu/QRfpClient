@@ -3,8 +3,8 @@
 StartPacket::StartPacket(char job, char trans, QByteArray begin, QByteArray end) :
     job_(job),
     trans_(trans),
-    d_begin(begin),
-    d_end(end)
+    d_begin(std::move(begin)),
+    d_end(std::move(end))
 {
     while(d_begin.size() < 18) d_begin.insert(0, ' ');
     while(d_end.size() < 18) d_end.insert(0, ' ');

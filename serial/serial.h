@@ -5,11 +5,6 @@
 
 namespace Serial {
 
-    enum DIRECTION {
-        DEVICE,
-        HOST,
-    };
-
     enum RESULT {
         SUCCESS,
         FAIL

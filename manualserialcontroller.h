@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include "serial/serialcontroller.h"
+#include "serial/serialport.h"
 
 class QSerialPort;
 
@@ -25,7 +26,7 @@ signals:
     void errorSig(const QString &err);
 
 public slots:
-    void setPort(QSerialPort *port);
+    void setPort(SerialPortParams params);
 
 private slots:
     void on_enqButton_clicked();
@@ -56,6 +57,8 @@ private slots:
 private:
     Ui::ManualSerialController *ui;
     QByteArray data;
+
+    std::unique_ptr<SerialPort> port_;
 
     void dataReceived(const QByteArray &data);
     void dataSent(const QByteArray &data);

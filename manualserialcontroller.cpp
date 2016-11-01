@@ -37,11 +37,12 @@ void ManualSerialController::error(const QString &err)
     emit errorSig(err);
 }
 
-void ManualSerialController::setPort(QSerialPort *port)
+void ManualSerialController::setPort(SerialPortParams params)
 {
-    if(port) {
-        SerialController::setPort(port);
-        ui->portName->setText(port->portName());
+    if(!port_ || !port_->isOpen()) {
+        port_ = std::make_unique<SerialPort>(params);
+        SerialController::setPort(port_.get());
+        ui->portName->setText(port_->portName());
     }
 }
 

@@ -2,13 +2,19 @@
 #define STARTPACKET_H
 
 #include "serial.h"
+#include <iostream>
 
 #include <QObject>
 
 class StartPacket : public Serial::IPacket
 {
 public:
-    StartPacket(char job, char trans, QByteArray begin = QByteArray(18, ' '), QByteArray end = QByteArray(18, ' '));
+    StartPacket(char job, char trans, QByteArray begin = "", QByteArray end = "");
+    StartPacket(const StartPacket &rhs) = default;
+    StartPacket(StartPacket &&rhs) = default;
+    StartPacket& operator=(const StartPacket &rhs) = default;
+    StartPacket& operator=(StartPacket &&rhs) = default;
+    virtual ~StartPacket() {}
 
     QByteArray getData() const;
 

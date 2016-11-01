@@ -1,9 +1,12 @@
 #ifndef SERIALSESSION_H
 #define SERIALSESSION_H
 
+#include "serial/serialport.h"
 #include "serial/serialcontroller.h"
 #include "serial/signalpacket.h"
 #include "serial/errorpacket.h"
+#include "serial/serialportparams.h"
+#include "serial/startpacket.h"
 
 #include <QThread>
 #include <QTimer>
@@ -12,11 +15,13 @@ class SerialSession : public QObject, public ISerialCtrl, public SerialControlle
 {
     Q_OBJECT
 public:
-    SerialSession(QSerialPort *port, Serial::IPacket &&start_packet, std::vector<Serial::IPacket*> *input_data,
+    SerialSession(SerialPortParams params, StartPacket start_packet, std::vector<Serial::IPacket*> *input_data,
                   Serial::IPacketHandler *resp_handler, int timeout = 10000);
 
-    SerialSession(QSerialPort *port, Serial::IPacket &&start_packet,
+    SerialSession(SerialPortParams params, StartPacket start_packet,
                   Serial::IPacketHandler *resp_handler, int timeout = 10000);
+
+    virtual ~SerialSession() {}
 
     void dataReceived(const QByteArray &data);
     void dataSent(const QByteArray &data);
@@ -31,6 +36,7 @@ signals:
 
 private slots:
     void async_reader();
+    void abc();
 
 private:
     enum class STATE {
@@ -42,15 +48,17 @@ private:
     };
 
     std::vector<Serial::IPacket*> *input_data_;
-    Serial::IPacket &&start_packet_;
+    StartPacket start_packet_;
     Serial::IPacketHandler *resp_hdl_;
-    Serial::DIRECTION direction_;
     STATE state_;
+    SerialPortParams spp;
+
+    std::unique_ptr<SerialPort> port_;
 
     std::vector<Serial::IPacket*> data_to_send_;
     std::vector<Serial::IPacket*>::iterator d_iter_;
 
-    std::unique_ptr<QTimer> timer_;
+    std::unique_ptr<QTimer> timer_, debugtimer;
 
     std::map<Serial::PACKET, std::unique_ptr<SignalPacket>> signalMap_;
     std::vector<std::unique_ptr<ErrorPacket>> errorPackets_;
