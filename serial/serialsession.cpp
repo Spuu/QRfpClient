@@ -156,12 +156,13 @@ void SerialSession::dataReceivedToDevice(const QByteArray &data)
     switch(data[0]) {
     case Serial::ACK:
     case Serial::EOT:
+    case Serial::NAK:
         (*d_iter_)->setResult(Serial::SUCCESS);
         ++d_iter_;
         break;
 
-    case Serial::NAK:
-        break;
+    /*case Serial::NAK:
+        break;*/
 
     case Serial::WACK:
         QThread::sleep(1);

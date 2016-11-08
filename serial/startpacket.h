@@ -9,7 +9,7 @@
 class StartPacket : public Serial::IPacket
 {
 public:
-    StartPacket(char job, char trans, QByteArray begin = "", QByteArray end = "");
+    StartPacket(std::string job, char trans, QByteArray begin = "", QByteArray end = "");
     StartPacket(const StartPacket &rhs) = default;
     StartPacket(StartPacket &&rhs) = default;
     StartPacket& operator=(const StartPacket &rhs) = default;
@@ -19,7 +19,7 @@ public:
     QByteArray getData() const;
 
 private:
-    char job_;
+    std::string job_;
     char trans_;
     QByteArray d_begin;
     QByteArray d_end;

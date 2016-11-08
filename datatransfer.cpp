@@ -53,7 +53,7 @@ void DataTransfer::on_getAllProductsButton_clicked()
     Logger::instance().log(LogLevel::INFO, "Weszliśmy do GetAllProducts :-)");
 
     QThread* thread = new QThread;
-    SerialSession* worker = new SerialSession(this->spp, StartPacket('I', '0'), pm.get(), 60000);
+    SerialSession* worker = new SerialSession(this->spp, StartPacket("I#00", '0'), pm.get(), 60000);
     worker->moveToThread(thread);
 
     connect(thread, SIGNAL (started()), worker, SLOT (process()));

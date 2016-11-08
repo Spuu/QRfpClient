@@ -1,6 +1,8 @@
 #include "startpacket.h"
+#include <QDebug>
 
-StartPacket::StartPacket(char job, char trans, QByteArray begin, QByteArray end) :
+
+StartPacket::StartPacket(std::string job, char trans, QByteArray begin, QByteArray end) :
     job_(job),
     trans_(trans),
     d_begin(std::move(begin)),
@@ -13,15 +15,16 @@ StartPacket::StartPacket(char job, char trans, QByteArray begin, QByteArray end)
 QByteArray StartPacket::getData() const
 {
     QByteArray data;
-    data += Serial::STX;
     data += 'S';
-    data += job_;
+    data += job_.c_str();
     data += trans_;
     data += d_begin;
     data += d_end;
     data += Serial::ETX;
-
     data += Serial::CalcCrc(data);
+
+    // STX does not count to CRC
+    data.prepend(Serial::STX);
 
     return data;
 }
